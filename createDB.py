@@ -22,11 +22,10 @@ reload(sys)
 sys.setdefaultencoding('utf8')
 
 
-def createDB(gdbpath,datatype):
+def createDB(gdbpath,datatype,ymdhms):
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    ymd=datetime.datetime.now().strftime(u"%Y%m%d%H")
     authorization_file=os.path.join(SCRIPT_DIR,u"server10.2.ecp")
-    database_name=datatype+ymd
+    database_name=datatype+ymdhms
     arcpy.AddMessage(database_name)
     arcpy.CreateEnterpriseGeodatabase_management(database_platform=u"PostgreSQL", instance_name=u"localhost",
                                                  database_name=database_name, account_authentication=u"DATABASE_AUTH",
@@ -35,8 +34,8 @@ def createDB(gdbpath,datatype):
                                                  gdb_admin_password=u"sde", tablespace_name=u"#",
                                                  authorization_file=authorization_file)
 
-    connsdepath=os.path.join(os.path.dirname(SCRIPT_DIR))
-    connsde=datatype+ymd+u".sde"
+    connsdepath=SCRIPT_DIR
+    connsde=datatype+ymdhms+u".sde"
     arcpy.AddMessage(connsde)
     conn = {}
     conn[u"out_folder_path"] = connsdepath
@@ -52,9 +51,18 @@ def createDB(gdbpath,datatype):
 
     arcpy.env.workspace = gdbpath
     sdepath=os.path.join(SCRIPT_DIR, connsde)
-    for ds in arcpy.ListDatasets(feature_type='feature') + ['']:
-        dspath=os.path.join(gdbpath,ds)
-        arcpy.Copy_management(dspath,sdepath)
+    for ds in arcpy.ListDatasets(feature_type=u'feature') + [u'']:
+        if ds != u'':
+            dspath=os.path.join(gdbpath,ds)
+            sdedspath=os.path.join(sdepath,ds)
+            arcpy.Copy_management(dspath,sdedspath)
+            arcpy.AddMessage(dspath)
+        else:
+            for fc in arcpy.ListFeatureClasses(feature_dataset=ds):
+                fcpath = os.path.join(gdbpath, ds, fc)
+                sdedspath = os.path.join(sdepath, ds,fc)
+                arcpy.Copy_management(fcpath, sdedspath)
+                arcpy.AddMessage(fcpath)
 
     return True
 

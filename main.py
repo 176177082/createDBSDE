@@ -15,6 +15,7 @@
 
 import sys
 import arcpy
+import datetime
 from createDB import createDB
 
 reload(sys)
@@ -24,7 +25,9 @@ sys.setdefaultencoding('utf8')
 def main():
     rgspath=arcpy.GetParameterAsText(0)
     mapindexpath=arcpy.GetParameterAsText(0)
-    createDB(rgspath,u"rgs")
+    ymdhms = datetime.datetime.now().strftime(u"%Y%m%d%H%M%S")
+    createDB(rgspath,u"rgs",ymdhms)
+    createDB(mapindexpath, u"mapindex", ymdhms)
     return True
 
 
